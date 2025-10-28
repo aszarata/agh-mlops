@@ -2,5 +2,10 @@
 .env
 **/.env
 **/*solution.ipynb
+
+# Lab02
 lab02/data
 lab02/data-hw
+
+# Lab03
+lab03/data
