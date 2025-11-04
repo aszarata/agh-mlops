@@ -9,3 +9,8 @@ lab02/data-hw
 
 # Lab03
 lab03/data
+
+# Lab04
+lab04/.idea
+lab04/data
+lab04/milvus_db/volumes
