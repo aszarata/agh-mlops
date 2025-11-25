@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  ml-app:
+    platform: linux/amd64
+    build: 
+      context: .. 
+      dockerfile: torch_app/Dockerfile
+    ports:
+      - "8001:8001"
