@@ -3,10 +3,8 @@
 Topics:
 1. [MLOps introduction](lab01) - dependency management, code quality, Git, FastAPI, Docker
 2. [Databases & file formats](lab02) - PostgreSQL, DuckDB, Parquet
-<<<<<<< HEAD
-=======
 3. [Data processing](lab03) - Polars
 4. [Vector databases](lab04) - pgvectorscale, SQLAlchemy, Milvus
 5. [Versioning](lab05) - DVC, MLFlow
 6. [ML testing & data-centric AI](lab06) - CleanLab, Giskard, Captum, SHAP
->>>>>>> 9f7a28b (Add labs 5 and 6)
+7. [Model optimization for inference](lab07) - PyTorch optimization, ONNX, ONNX Runtime
