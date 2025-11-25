@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  ml-app:
+    platform: linux/amd64
+    build: 
+      context: .. 
+      dockerfile: onnx_app/Dockerfile
+    ports:
+      - "8000:8000"
