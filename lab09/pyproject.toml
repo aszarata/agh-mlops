@@ -1,0 +1,25 @@
+[project]
+name = "agh-mlops-hw01"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.42.5",
+    "clean-text>=0.6.0",
+    "fastapi>=0.119.0",
+    "httpx>=0.28.1",
+    "joblib>=1.5.2",
+    "mypy>=1.18.2",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "sentence-transformers>=5.1.1",
+    "torch>=2.8.0",
+    "transformers>=4.57.0",
+    "uvicorn>=0.37.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["."]
+addopts = ["-rP"]
