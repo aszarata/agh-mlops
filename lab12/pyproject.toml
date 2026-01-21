@@ -7,14 +7,17 @@ readme = "README.md"
 requires-python = "==3.11.*"
 
 dependencies = [
-    "apache-airflow[celery,pandas,standard,uv]==3.1.5",
-    "cloudpickle",
-    "pandas",
-    "requests",
+    "apache-airflow[celery,postgres,standard,uv]==3.1.5",
     "twelvedata",
 ]
 
 [dependency-groups]
 dev = [
     "ruff"
+]
+
+airflow_common = [
+    "apache-airflow[celery,pandas,postgres,s3fs,standard,uv]==3.1.5",
+    "apache-airflow-providers-amazon",
+    "requests",
 ]
