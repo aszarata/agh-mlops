@@ -96,6 +96,8 @@ services:
     depends_on:
       airflow-init:
         condition: service_completed_successfully
+    environment:
+      - TWELVEDATA_API_KEY=${TWELVEDATA_API_KEY}
     restart: always
 
   airflow-scheduler:
