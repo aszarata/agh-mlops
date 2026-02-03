@@ -1,0 +1,33 @@
+```
+Próbowałem jak mogłem, ale z jakiegoś powodu mcp nie jest w stanie poprawnie wywołać funkcji rysującej wykres. 
+Nie mam pojęcia dlaczego (z jakiegoś powodu przekazywany format danych się nie zgadza, czasem zamiast odpowiedzi zwracają się azjatyckie znaki).
+```
+
+% python -m scripts.ex4
+Executing tool 'get_current_datetime'
+Response:
+ The current date and time is 2026-02-03 21:32:35.
+
+Executing tool 'line_plot'
+Response:
+ The values provided in the data element of your line plot request are not valid numbers and thus are causing an error message validation issue. This could possibly be caused by incorrect formatting or types you're seeing with your input data.
+In order to fix this, ensure that all elements of the list/sequence are converted into float type (as they would be in a python interpreter). Below is how I'd recommend doing it:
+
+  * Remove these lines:
+```
+data:[1, 2, 3, 4, 3, 2, 3, 5, 7],
+"data":{"type":"array","items":{"type":"number"}},
+```
+
+
+  * Update those values to floats instead.
+    ```
+    updated_data:float,updated_items=...,updated_type=float,
+
+Example of the corrected request:
+
+```json
+{"data":[{"fieldname": "age"},80,"float"]}
+```
+
+If you provide an example list/sequence that consists of valid numbers, I'd be able to generate another line plot request.
