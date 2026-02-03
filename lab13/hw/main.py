@@ -1,104 +1,62 @@
 import asyncio
-import json
-from contextlib import AsyncExitStack
-from openai import OpenAI
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
+import os
+import sys
+from dotenv import load_dotenv
+from guardrails import Guard
+# from guardrails.hub import RestrictToTopic
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from ollama import AsyncClient
 
+load_dotenv()
 
-class MCPManager:
-    def __init__(self, servers: dict[str, str]):
-        self.servers = servers
-        self.clients = {}
-        self.tools = []  # in OpenAI format
-        self._stack = AsyncExitStack()
-
-    async def __aenter__(self):
-        for url in self.servers.values():
-            read, write, session_id = await self._stack.enter_async_context(
-                streamable_http_client(url)
-            )
-            session = await self._stack.enter_async_context(ClientSession(read, write))
-            await session.initialize()
-
-            tools_resp = await session.list_tools()
-            for t in tools_resp.tools:
-                self.clients[t.name] = session
-                self.tools.append(
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": t.name,
-                            "description": t.description,
-                            "parameters": t.inputSchema,
-                        },
-                    }
-                )
-
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self._stack.aclose()
-
-    async def call_tool(self, name: str, args: dict) -> dict | str:
-        result = await self.clients[name].call_tool(name, arguments=args)
-        return result.content[0].text
-
-
-async def make_llm_request(prompt: str) -> str:
-    mcp_servers = {
-        "plot_data_server": "http://localhost:8003/mcp",
-        "datetime_server": "http://localhost:8002/mcp",
-    }
-
-    vllm_client = OpenAI(api_key="ollama", base_url="http://localhost:11434/v1")
-
-    async with MCPManager(mcp_servers) as mcp:
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a helpful assistant. Use tools if you need to."
-                    "When calling tools, provide arguments as proper JSON values, "
-                    # "If the task is impossible based on your knowledge and tools, "
-                    # "return that information."
-                ),
-            },
-            {"role": "user", "content": prompt},
+class TravelAgent:
+    def __init__(self):
+        self.ollama = AsyncClient(host="http://127.0.0.1:11434")
+        self.history = [
+            {"role": "system", "content": "Assistant mode: Travel Expert. Focus: Weather & Sights. Reject non-travel queries."}
         ]
+        # self.guard = Guard().use(
+        #     RestrictToTopic,
+        #     valid_topics=["travel", "weather", "tourism", "geography", "hotels", "flights"],
+        #     invalid_topics=["small talk"],
+        #     on_fail="fix",
+        # )
 
-        # guard: loop limit, we break as soon as we get an answer
-        for _ in range(10):
-            response = vllm_client.chat.completions.create(
-                model="qwen2.5:1.5b",
-                messages=messages,
-                tools=mcp.tools,
-                tool_choice="auto",
-                max_completion_tokens=1000,
-                extra_body={"chat_template_kwargs": {"enable_thinking": False}},
-            )
+    async def _process_ai_response(self, text):
+        try:
+            return text #self.guard.validate(text).validated_output
+        except:
+            return "My expertise is limited to travel planning. Please ask about trips or weather."
 
-            response = response.choices[0].message
-            if not response.tool_calls:
-                return response.content
+    async def start_session(self):
+        weather_srv = StdioServerParameters(command="python", args=["weather.py"], env=os.environ.copy())
+        tavily_srv = StdioServerParameters(command="python", args=["tavily.py"], env=os.environ.copy())
 
-            messages.append(response)
-            for tool_call in response.tool_calls:
-                func_name = tool_call.function.name
-                func_args = json.loads(tool_call.function.arguments)
+        async with stdio_client(weather_srv) as weather_transport:
+            print("Connected to Weather")
+            async with stdio_client(tavily_srv) as tavily_transport:
+                print("Connected to Tavily")
+                w_session = ClientSession(weather_transport[0], weather_transport[1])
+                t_session = ClientSession(tavily_transport[0], tavily_transport[1])
 
-                print(f"Executing tool '{func_name}'")
-                func_result = await mcp.call_tool(func_name, func_args)
+                await w_session.initialize()
+                await t_session.initialize()
+                
+                while True:
+                    raw_user_input = await asyncio.to_thread(input, "\n$> ")
+                    self.history.append({"role": "user", "content": raw_user_input})
 
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "name": func_name,
-                        "content": str(func_result),
-                    }
-                )
+                    response = await self.ollama.chat(
+                        model=os.environ.get("MODEL_NAME"),
+                        messages=self.history
+                    )
 
+                    clean_reply = await self._process_ai_response(response["message"]["content"])
+                    
+                    print(f"\nAssistant: {clean_reply}")
+                    self.history.append({"role": "assistant", "content": clean_reply})
 
 if __name__ == "__main__":
-    response = asyncio.run(make_llm_request())
+    agent = TravelAgent()
+    asyncio.run(agent.start_session())

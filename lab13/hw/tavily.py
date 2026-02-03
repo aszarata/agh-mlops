@@ -3,12 +3,12 @@ import requests
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("TavilySearch")
-TOKEN = os.environ.get("TAVILY_API_KEY")
+API = os.environ.get("TAVILY_API_KEY")
 
 @mcp.tool()
 def search_travel_info(query: str):
     data = {
-        "api_key": TOKEN,
+        "api_key": API,
         "query": query,
         "search_depth": "advanced",
         "max_results": 5
@@ -24,4 +24,4 @@ def search_travel_info(query: str):
     return "\n\n".join(output)
 
 if __name__ == "__main__":
-    mcp.run(transport="streamable-http", port=8002)
+    mcp.run()
